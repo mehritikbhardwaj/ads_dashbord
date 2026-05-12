@@ -37,120 +37,120 @@ class CampaignCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          campaign.name,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      _StatusBadge(status: campaign.status),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      _Chip(
-                        icon: _objectiveIcon(campaign.objective),
-                        label: campaign.objective,
-                      ),
-                      _Chip(
-                        icon: _channelIcon(campaign.channel),
-                        label: campaign.channel,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Total spend',
-                    style: TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '${formatNumber(campaign.spend)} ${campaign.currency} '
-                          '/ ${formatNumber(campaign.budget)} ${campaign.currency}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        '$pct%',
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        campaign.name,
                         style: const TextStyle(
-                          color: AppTheme.accent,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  AnimatedProgressBar(value: progress),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _Metric(
-                          icon: Icons.visibility_outlined,
-                          label: 'Impressions',
-                          value: formatCompact(campaign.impressions),
+                    ),
+                    _StatusBadge(status: campaign.status),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    _Chip(
+                      icon: _objectiveIcon(campaign.objective),
+                      label: campaign.objective,
+                    ),
+                    _Chip(
+                      icon: _channelIcon(campaign.channel),
+                      label: campaign.channel,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Total spend',
+                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${formatNumber(campaign.spend)} ${campaign.currency} '
+                        '/ ${formatNumber(campaign.budget)} ${campaign.currency}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
                         ),
                       ),
-                      Expanded(
-                        child: _Metric(
-                          icon: Icons.ads_click_outlined,
-                          label: 'Clicks',
-                          value: formatCompact(campaign.clicks),
+                    ),
+                    Text(
+                      '$pct%',
+                      style: const TextStyle(
+                        color: AppTheme.accent,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                AnimatedProgressBar(value: progress),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _Metric(
+                        icon: Icons.visibility_outlined,
+                        label: 'Impressions',
+                        value: campaign.impressions.toDouble(),
+                        formatter: (v) => formatCompact(v),
+                      ),
+                    ),
+                    Expanded(
+                      child: _Metric(
+                        icon: Icons.ads_click_outlined,
+                        label: 'Clicks',
+                        value: campaign.clicks.toDouble(),
+                        formatter: (v) => formatCompact(v),
+                      ),
+                    ),
+                    Expanded(
+                      child: _Metric(
+                        icon: Icons.trending_up,
+                        label: 'CTR',
+                        value: ctrRatio,
+                        formatter: (v) => formatPercentRatio(v),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const Divider(height: 1),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.calendar_today_outlined,
+                      size: 16,
+                      color: AppTheme.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _dateRange(campaign.startDate, campaign.endDate),
+                        style: const TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 12,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      Expanded(
-                        child: _Metric(
-                          icon: Icons.trending_up,
-                          label: 'CTR',
-                          value: formatPercentRatio(ctrRatio),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  const Divider(height: 1),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.calendar_today_outlined,
-                        size: 16,
-                        color: AppTheme.textSecondary,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _dateRange(campaign.startDate, campaign.endDate),
-                          style: const TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 12,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
@@ -208,8 +208,13 @@ class _CampaignThumbnail extends StatelessWidget {
       height: 120,
       width: double.infinity,
       fit: BoxFit.cover,
-      loadingBuilder: (context, child, progress) {
-        if (progress == null) return child;
+      frameBuilder: (context, child, frame, wasSyncLoaded) {
+        if (wasSyncLoaded || frame != null) {
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: child,
+          );
+        }
         return Container(
           height: 120,
           color: Colors.white10,
@@ -237,9 +242,9 @@ class _Chip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-      color: AppTheme.accent.withValues(alpha: 0.14),
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: AppTheme.accent.withValues(alpha: 0.2)),
+        color: AppTheme.accent.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.accent.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -321,11 +326,13 @@ class _Metric extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    required this.formatter,
   });
 
   final IconData icon;
   final String label;
-  final String value;
+  final double value;
+  final String Function(double) formatter;
 
   @override
   Widget build(BuildContext context) {
@@ -334,17 +341,15 @@ class _Metric extends StatelessWidget {
       children: [
         Icon(icon, size: 18, color: AppTheme.accent),
         const SizedBox(height: 6),
-        Text(
-          value,
+        AnimatedMetricText(
+          value: value,
+          formatter: formatter,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(
-            color: AppTheme.textSecondary,
-            fontSize: 11,
-          ),
+          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
         ),
       ],
     );

@@ -44,8 +44,9 @@ class AdsRemoteDataSource {
 
   Future<HistoryResponse> fetchHistory(String campaignId) async {
     try {
-      final res = await _dio
-          .get<Map<String, dynamic>>('/campaigns/$campaignId/history');
+      final res = await _dio.get<Map<String, dynamic>>(
+        '/campaigns/$campaignId/history',
+      );
       final data = res.data;
       if (data == null) throw const AppException('Empty history response');
       return HistoryResponse.fromJson(data);
@@ -63,6 +64,7 @@ class AdsRemoteDataSource {
         queryParameters: {'days': days},
       );
       final data = res.data;
+
       if (data == null) throw const AppException('Empty summary response');
       return SummaryResponse.fromJson(data);
     } on DioException catch (e) {
@@ -74,8 +76,11 @@ class AdsRemoteDataSource {
 
   Future<LiveSnapshot> fetchLiveMetrics() async {
     try {
-      final res = await _dio.get<Map<String, dynamic>>('/campaigns/metrics/live');
+      final res = await _dio.get<Map<String, dynamic>>(
+        '/campaigns/metrics/live',
+      );
       final data = res.data;
+
       if (data == null) throw const AppException('Empty live metrics response');
       return LiveSnapshot.fromJson(data);
     } on DioException catch (e) {

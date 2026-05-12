@@ -52,16 +52,15 @@ class SpendSummaryCubit extends Cubit<SpendSummaryState> {
     emit(state.copyWith(isLoading: true, errorMessage: null));
     try {
       final res = await _repository.loadSummary(days: state.days);
-      emit(state.copyWith(
-        isLoading: false,
-        summary: res.summary,
-        errorMessage: null,
-      ));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          summary: res.summary,
+          errorMessage: null,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      ));
+      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
     }
   }
 }

@@ -10,6 +10,7 @@ class DashboardCard extends StatelessWidget {
     this.margin,
     this.padding = const EdgeInsets.all(16),
     this.accent,
+    this.backgroundColor,
     this.onTap,
     this.clipBehavior = Clip.antiAlias,
     super.key,
@@ -19,6 +20,7 @@ class DashboardCard extends StatelessWidget {
   final EdgeInsetsGeometry? margin;
   final EdgeInsetsGeometry padding;
   final Color? accent;
+  final Color? backgroundColor;
   final VoidCallback? onTap;
   final Clip clipBehavior;
 
@@ -31,12 +33,14 @@ class DashboardCard extends StatelessWidget {
       margin: margin,
       clipBehavior: clipBehavior,
       decoration: BoxDecoration(
-        color: AppTheme.card,
+        color: backgroundColor ?? AppTheme.card,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: borderColor),
         boxShadow: [
           BoxShadow(
-            color: (accent ?? Colors.black).withValues(alpha: accent == null ? 0.18 : 0.12),
+            color: (accent ?? Colors.black).withValues(
+              alpha: accent == null ? 0.18 : 0.12,
+            ),
             blurRadius: accent == null ? 18 : 24,
             offset: const Offset(0, 12),
           ),
@@ -46,10 +50,10 @@ class DashboardCard extends StatelessWidget {
     );
 
     if (onTap == null) return content;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: content,
       ),
@@ -225,7 +229,8 @@ class SoftPulse extends StatefulWidget {
   State<SoftPulse> createState() => _SoftPulseState();
 }
 
-class _SoftPulseState extends State<SoftPulse> with SingleTickerProviderStateMixin {
+class _SoftPulseState extends State<SoftPulse>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1100),
@@ -257,9 +262,10 @@ class _SoftPulseState extends State<SoftPulse> with SingleTickerProviderStateMix
   Widget build(BuildContext context) {
     if (!widget.enabled) return widget.child;
     return ScaleTransition(
-      scale: Tween(begin: widget.minScale, end: widget.maxScale).animate(
-        CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-      ),
+      scale: Tween(
+        begin: widget.minScale,
+        end: widget.maxScale,
+      ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut)),
       child: widget.child,
     );
   }

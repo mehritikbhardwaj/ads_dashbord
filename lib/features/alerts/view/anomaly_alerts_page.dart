@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/models/anomaly.dart';
+import '../../../widgets/dashboard_ui.dart';
 import '../bloc/anomaly_alerts_bloc.dart';
 
 class AnomalyAlertsPage extends StatelessWidget {
@@ -14,30 +15,35 @@ class AnomalyAlertsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Anomaly Alerts'),
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () {},
-        ),
+        leading: IconButton(icon: const Icon(Icons.menu), onPressed: () {}),
       ),
       body: BlocBuilder<AnomalyAlertsBloc, AnomalyAlertsState>(
         builder: (context, state) {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
-              _MonitoringCard(
-                isPolling: state.isPolling,
-                lastChecked: state.lastChecked,
+              StaggeredReveal(
+                index: 0,
+                child: _MonitoringCard(
+                  isPolling: state.isPolling,
+                  lastChecked: state.lastChecked,
+                ),
               ),
               if (state.errorMessage != null) ...[
                 const SizedBox(height: 12),
-                Card(
-                  color: AppTheme.danger.withValues(alpha: 0.08),
+                DashboardCard(
+                  accent: AppTheme.danger,
                   child: ListTile(
-                    leading: const Icon(Icons.error_outline, color: AppTheme.danger),
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(
+                      Icons.error_outline,
+                      color: AppTheme.danger,
+                    ),
                     title: Text(state.errorMessage!),
                     trailing: TextButton(
-                      onPressed: () =>
-                          context.read<AnomalyAlertsBloc>().add(const AnomalyAlertsPoll()),
+                      onPressed: () => context.read<AnomalyAlertsBloc>().add(
+                        const AnomalyAlertsPoll(),
+                      ),
                       child: const Text('Retry'),
                     ),
                   ),
@@ -50,14 +56,20 @@ class AnomalyAlertsPage extends StatelessWidget {
                   child: Center(child: CircularProgressIndicator()),
                 )
               else if (state.anomalies.isEmpty)
-                const Card(
+                const DashboardCard(
                   child: Padding(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.zero,
                     child: Text('No anomalies detected in the latest window.'),
                   ),
                 )
               else
-                ...state.anomalies.map((a) => _AnomalyCard(a)),
+                ...state.anomalies.indexed.map(
+                  (entry) => StaggeredReveal(
+                    key: ValueKey(entry.$2.id),
+                    index: entry.$1 + 1,
+                    child: _AnomalyCard(entry.$2),
+                  ),
+                ),
             ],
           );
         },
@@ -74,19 +86,15 @@ class _MonitoringCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return DashboardCard(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.zero,
         child: Row(
           children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppTheme.accent.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.monitor_heart_outlined, color: AppTheme.accent),
+            const DashboardIconBox(
+              icon: Icons.monitor_heart_outlined,
+              size: 48,
+              radius: 4,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -100,12 +108,18 @@ class _MonitoringCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     'Polling Ads API every 30 seconds',
-                    style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 12,
+                    ),
                   ),
                   if (lastChecked != null)
                     Text(
                       'Last check: ${formatRelative(lastChecked!)}',
-                      style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
                 ],
               ),
@@ -131,34 +145,17 @@ class _MonitoringCard extends StatelessWidget {
   }
 }
 
-class _LiveDot extends StatefulWidget {
+class _LiveDot extends StatelessWidget {
   const _LiveDot({required this.active, required this.busy});
 
   final bool active;
   final bool busy;
 
   @override
-  State<_LiveDot> createState() => _LiveDotState();
-}
-
-class _LiveDotState extends State<_LiveDot> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1200),
-  )..repeat(reverse: true);
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return ScaleTransition(
-      scale: Tween(begin: 0.85, end: 1.0).animate(
-        CurvedAnimation(parent: _c, curve: Curves.easeInOut),
-      ),
+    return SoftPulse(
+      enabled: active,
+      minScale: busy ? 0.78 : 0.88,
       child: Container(
         width: 10,
         height: 10,
@@ -182,27 +179,20 @@ class _AnomalyCard extends StatelessWidget {
     final accent = isSpike ? AppTheme.danger : AppTheme.warning;
     final tag = isSpike ? 'Spend Spike' : 'CTR Drop';
 
-    return Card(
+    return DashboardCard(
       margin: const EdgeInsets.only(bottom: 12),
+      accent: accent,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    isSpike ? Icons.trending_up : Icons.trending_down,
-                    color: accent,
-                  ),
+                DashboardIconBox(
+                  icon: isSpike ? Icons.trending_up : Icons.trending_down,
+                  color: accent,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -210,7 +200,10 @@ class _AnomalyCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: accent.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(20),
@@ -234,22 +227,25 @@ class _AnomalyCard extends StatelessWidget {
                       ),
                       const Text(
                         'Campaign',
-                        style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 Text(
                   formatRelative(anomaly.detectedAt),
-                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                  style: const TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 10),
-            Text(
-              anomaly.message,
-              style: const TextStyle(height: 1.35),
-            ),
+            Text(anomaly.message, style: const TextStyle(height: 1.35)),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -272,7 +268,8 @@ class _AnomalyCard extends StatelessWidget {
                 Expanded(
                   child: _MetricBox(
                     label: 'Change',
-                    value: '${anomaly.deviationPercent > 0 ? '+' : ''}${anomaly.deviationPercent.toStringAsFixed(0)}%',
+                    value:
+                        '${anomaly.deviationPercent > 0 ? '+' : ''}${anomaly.deviationPercent.toStringAsFixed(0)}%',
                     icon: Icons.show_chart,
                   ),
                 ),

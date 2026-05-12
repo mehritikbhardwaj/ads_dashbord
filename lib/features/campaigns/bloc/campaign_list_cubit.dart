@@ -13,6 +13,7 @@ class CampaignListState extends Equatable {
     required this.isLoading,
     required this.campaigns,
     required this.filtered,
+    required this.query,
     this.errorMessage,
   });
 
@@ -20,6 +21,7 @@ class CampaignListState extends Equatable {
   final bool isLoading;
   final List<Campaign> campaigns;
   final List<Campaign> filtered;
+  final String query;
   final String? errorMessage;
 
   factory CampaignListState.initial() => const CampaignListState(
@@ -27,6 +29,7 @@ class CampaignListState extends Equatable {
         isLoading: true,
         campaigns: [],
         filtered: [],
+        query: '',
       );
 
   CampaignListState copyWith({
@@ -34,6 +37,7 @@ class CampaignListState extends Equatable {
     bool? isLoading,
     List<Campaign>? campaigns,
     List<Campaign>? filtered,
+    String? query,
     String? errorMessage,
   }) {
     return CampaignListState(
@@ -41,12 +45,14 @@ class CampaignListState extends Equatable {
       isLoading: isLoading ?? this.isLoading,
       campaigns: campaigns ?? this.campaigns,
       filtered: filtered ?? this.filtered,
+      query: query ?? this.query,
       errorMessage: errorMessage,
     );
   }
 
   @override
-  List<Object?> get props => [filter, isLoading, campaigns, filtered, errorMessage];
+  List<Object?> get props =>
+      [filter, isLoading, campaigns, filtered, query, errorMessage];
 }
 
 class CampaignListCubit extends Cubit<CampaignListState> {
@@ -68,11 +74,10 @@ class CampaignListCubit extends Cubit<CampaignListState> {
     emit(state.copyWith(isLoading: true, errorMessage: null));
     try {
       final list = await _repository.loadCampaigns();
-      final filtered = _apply(list, state.filter);
       emit(state.copyWith(
         isLoading: false,
         campaigns: list,
-        filtered: filtered,
+        filtered: _apply(list, state.filter, state.query),
         errorMessage: null,
       ));
     } catch (e) {
@@ -84,20 +89,42 @@ class CampaignListCubit extends Cubit<CampaignListState> {
   }
 
   void setFilter(CampaignFilter filter) {
-    final filtered = _apply(state.campaigns, filter);
-    emit(state.copyWith(filter: filter, filtered: filtered));
+    emit(state.copyWith(
+      filter: filter,
+      filtered: _apply(state.campaigns, filter, state.query),
+    ));
   }
 
-  List<Campaign> _apply(List<Campaign> all, CampaignFilter f) {
+  void setQuery(String query) {
+    emit(state.copyWith(
+      query: query,
+      filtered: _apply(state.campaigns, state.filter, query),
+    ));
+  }
+
+  List<Campaign> _apply(List<Campaign> all, CampaignFilter f, String query) {
+    Iterable<Campaign> result = all;
     switch (f) {
       case CampaignFilter.all:
-        return List.of(all);
+        break;
       case CampaignFilter.active:
-        return all.where((c) => c.status == CampaignStatus.active).toList();
+        result = result.where((c) => c.status == CampaignStatus.active);
+        break;
       case CampaignFilter.paused:
-        return all.where((c) => c.status == CampaignStatus.paused).toList();
+        result = result.where((c) => c.status == CampaignStatus.paused);
+        break;
       case CampaignFilter.ended:
-        return all.where((c) => c.status == CampaignStatus.ended).toList();
+        result = result.where((c) => c.status == CampaignStatus.ended);
+        break;
     }
+    final q = query.trim().toLowerCase();
+    if (q.isNotEmpty) {
+      result = result.where((c) {
+        return c.name.toLowerCase().contains(q) ||
+            c.objective.toLowerCase().contains(q) ||
+            c.channel.toLowerCase().contains(q);
+      });
+    }
+    return result.toList();
   }
 }

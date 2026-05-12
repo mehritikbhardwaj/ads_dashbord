@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Dark marketing dashboard theme aligned with the design references.
 abstract final class AppTheme {
-  static const Color background = Color(0xFF121212);
+  static const Color background = Color(0xFF111113);
   static const Color card = Color(0xFF1B1A1E);
   static const Color cardBorder = Color(0xFF201F23);
   static const Color accent = Color(0xFF1CB4BF);

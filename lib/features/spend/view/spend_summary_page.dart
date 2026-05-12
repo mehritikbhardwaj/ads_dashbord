@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/models/summary_models.dart';
+import '../../../widgets/dashboard_ui.dart';
 import '../bloc/spend_summary_cubit.dart';
 
 class SpendSummaryPage extends StatelessWidget {
@@ -15,10 +16,7 @@ class SpendSummaryPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Spend Summary'),
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () {},
-        ),
+        leading: IconButton(icon: const Icon(Icons.menu), onPressed: () {}),
       ),
       body: BlocBuilder<SpendSummaryCubit, SpendSummaryState>(
         builder: (context, state) {
@@ -38,17 +36,29 @@ class SpendSummaryPage extends StatelessWidget {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               children: [
-                _TotalSpendCard(total: s.totalSpend),
-                const SizedBox(height: 16),
-                _DateRangeRow(
-                  days: state.days,
-                  onSelect: (d) =>
-                      context.read<SpendSummaryCubit>().selectRange(d),
+                StaggeredReveal(
+                  index: 0,
+                  child: _TotalSpendCard(total: s.totalSpend),
                 ),
                 const SizedBox(height: 16),
-                _ChannelCard(channels: s.byChannel),
+                StaggeredReveal(
+                  index: 1,
+                  child: _DateRangeRow(
+                    days: state.days,
+                    onSelect: (d) =>
+                        context.read<SpendSummaryCubit>().selectRange(d),
+                  ),
+                ),
                 const SizedBox(height: 16),
-                _TopCtrCard(top: s.topCampaigns),
+                StaggeredReveal(
+                  index: 2,
+                  child: _ChannelCard(channels: s.byChannel),
+                ),
+                const SizedBox(height: 16),
+                StaggeredReveal(
+                  index: 3,
+                  child: _TopCtrCard(top: s.topCampaigns),
+                ),
               ],
             ),
           );
@@ -65,19 +75,17 @@ class _TotalSpendCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return DashboardCard(
+      accent: AppTheme.success,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.zero,
         child: Row(
           children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: AppTheme.success.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.show_chart, color: AppTheme.success),
+            const DashboardIconBox(
+              icon: Icons.show_chart,
+              color: AppTheme.success,
+              size: 52,
+              radius: 4,
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -89,8 +97,9 @@ class _TotalSpendCard extends StatelessWidget {
                     style: TextStyle(color: AppTheme.textSecondary),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    '${formatNumber(total)} SAR',
+                  AnimatedMetricText(
+                    value: total,
+                    formatter: (value) => '${formatNumber(value)} SAR',
                     style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w700,
@@ -116,41 +125,91 @@ class _DateRangeRow extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget chip(String label, int value) {
       final selected = days == value;
-      return Expanded(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: OutlinedButton(
-            onPressed: () => onSelect(value),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: selected ? AppTheme.accent : AppTheme.textSecondary,
-              side: BorderSide(
-                color: selected ? AppTheme.accent : Colors.white24,
-              ),
-              backgroundColor:
-                  selected ? AppTheme.accent.withValues(alpha: 0.08) : null,
+      return Padding(
+        padding: const EdgeInsets.only(right: 10),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          decoration: BoxDecoration(
+            color: selected
+                ? AppTheme.accent.withValues(alpha: 0.14)
+                : AppTheme.card,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected ? AppTheme.accent : AppTheme.cardBorder,
             ),
-            child: Text(label),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => onSelect(value),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: selected ? AppTheme.accent : AppTheme.textSecondary,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ),
           ),
         ),
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Date Range',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 10),
-        Row(
+    return DashboardCard(
+      child: Padding(
+        padding: EdgeInsets.zero,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            chip('Last 7 Days', 7),
-            chip('Last 14 Days', 14),
-            chip('Last 30 Days', 30),
+            const Row(
+              children: [
+                DashboardIconBox(
+                  icon: Icons.date_range_rounded,
+                  color: AppTheme.accent,
+                  size: 40,
+                  radius: 10,
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Date Range',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Pick a window to compare spend trends',
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  chip('Last 7 Days', 7),
+                  chip('Last 14 Days', 14),
+                  chip('Last 30 Days', 30),
+                ],
+              ),
+            ),
           ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -169,16 +228,16 @@ class _ChannelCard extends StatelessWidget {
       const Color(0xFF8E24AA),
     ];
     if (channels.isEmpty) {
-      return const Card(
+      return const DashboardCard(
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.zero,
           child: Text('No channel data'),
         ),
       );
     }
-    return Card(
+    return DashboardCard(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -288,9 +347,9 @@ class _TopCtrCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final list = top.take(3).toList();
-    return Card(
+    return DashboardCard(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -348,8 +407,8 @@ class _RankRow extends StatelessWidget {
             rank == 1
                 ? Icons.campaign_outlined
                 : rank == 2
-                    ? Icons.card_giftcard_outlined
-                    : Icons.shopping_cart_outlined,
+                ? Icons.card_giftcard_outlined
+                : Icons.shopping_cart_outlined,
             color: AppTheme.accent,
           ),
         ),

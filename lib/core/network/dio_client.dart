@@ -1,8 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
-
 import '../config/api_config.dart';
-import 'dio_logging_interceptor.dart';
 import 'json_body_interceptor.dart';
 
 /// Shared [Dio] instance for remote calls.
@@ -24,10 +21,6 @@ class DioClient {
     );
 
     dio.interceptors.add(JsonBodyInterceptor());
-
-    if (kDebugMode) {
-      dio.interceptors.add(DioLoggingInterceptor());
-    }
 
     return dio;
   }
